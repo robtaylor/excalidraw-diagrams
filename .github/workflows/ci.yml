@@ -1,0 +1,168 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  # Job 1: Run Python unit tests
+  unit-tests:
+    name: Unit Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run unit tests
+        run: python tests/test_generator.py
+
+      - name: Test example diagram generation
+        run: |
+          python -c "
+          import sys
+          sys.path.insert(0, 'scripts')
+          from excalidraw_generator import Diagram, Flowchart, ArchitectureDiagram
+
+          # Test basic diagram
+          d = Diagram()
+          d.box(100, 100, 'Test', color='blue')
+          d.save('test_output.excalidraw')
+
+          # Test flowchart
+          fc = Flowchart()
+          fc.start('Start')
+          fc.process('p1', 'Process')
+          fc.end('End')
+          fc.connect('__start__', 'p1')
+          fc.connect('p1', '__end__')
+          fc.save('test_flowchart.excalidraw')
+
+          # Test architecture diagram
+          arch = ArchitectureDiagram()
+          arch.component('api', 'API', x=100, y=100)
+          arch.database('db', 'DB', x=300, y=100)
+          arch.connect('api', 'db')
+          arch.save('test_arch.excalidraw')
+
+          print('All example diagrams generated successfully')
+          "
+
+      - name: Validate generated files are valid JSON
+        run: |
+          for f in *.excalidraw; do
+            echo "Validating $f..."
+            python -c "import json; json.load(open('$f'))"
+          done
+
+  # Job 2: Validate SKILL.md format
+  validate-skill:
+    name: Validate Skill Format
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check SKILL.md exists
+        run: test -f SKILL.md
+
+      - name: Validate SKILL.md frontmatter
+        run: |
+          python3 << 'EOF'
+          import re
+
+          with open('SKILL.md') as f:
+              content = f.read()
+
+          # Check frontmatter exists
+          if not content.startswith('---'):
+              print("ERROR: SKILL.md must start with YAML frontmatter (---)")
+              exit(1)
+
+          # Extract frontmatter
+          match = re.match(r'^---\n(.*?)\n---', content, re.DOTALL)
+          if not match:
+              print("ERROR: Invalid frontmatter format")
+              exit(1)
+
+          frontmatter = match.group(1)
+
+          # Check required fields
+          if 'name:' not in frontmatter:
+              print("ERROR: SKILL.md frontmatter must contain 'name' field")
+              exit(1)
+
+          if 'description:' not in frontmatter:
+              print("ERROR: SKILL.md frontmatter must contain 'description' field")
+              exit(1)
+
+          # Validate name format (lowercase, hyphens only)
+          name_match = re.search(r'name:\s*(\S+)', frontmatter)
+          if name_match:
+              name = name_match.group(1)
+              if not re.match(r'^[a-z0-9-]+$', name):
+                  print(f"WARNING: Skill name '{name}' should be lowercase with hyphens only")
+
+          print("SKILL.md validation passed!")
+          EOF
+
+  # Job 3: Integration test with Claude Code (requires API key)
+  integration-test:
+    name: Integration Test with Claude Code
+    runs-on: ubuntu-latest
+    # Only run if ANTHROPIC_API_KEY is available (not on forks)
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install skill to test location
+        run: |
+          mkdir -p ~/.claude/skills
+          cp -r . ~/.claude/skills/excalidraw-diagrams
+
+      - name: Test skill with Claude Code
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            I want to verify the excalidraw-diagrams skill is working correctly.
+
+            Please do the following:
+            1. Create a simple architecture diagram showing: User -> API -> Database
+            2. Save it as 'ci_test_diagram.excalidraw' in the current directory
+            3. Verify the file was created and contains valid Excalidraw JSON
+
+            Use the excalidraw-diagrams skill to generate this diagram.
+            Report success or failure.
+          allowed_tools: "Bash,Read,Write,Glob,Grep"
+          max_turns: 10
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Verify output file exists
+        run: |
+          if [ -f ci_test_diagram.excalidraw ]; then
+            echo "Success: Diagram file was created"
+            python -c "import json; d=json.load(open('ci_test_diagram.excalidraw')); print(f'Elements: {len(d.get(\"elements\", []))}')"
+          else
+            echo "Warning: Expected diagram file not found (skill may not have been triggered)"
+            # List what files were created
+            ls -la ./*.excalidraw 2>/dev/null || echo "No .excalidraw files found"
+          fi

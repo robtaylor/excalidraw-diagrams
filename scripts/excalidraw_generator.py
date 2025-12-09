@@ -556,7 +556,7 @@ class Diagram:
 
     def to_json(self, indent: int = 2) -> str:
         """Export diagram as JSON string."""
-        return json.dumps(self.to_dict(), indent=indent)
+        return json.dumps(self.to_dict(), indent=indent, ensure_ascii=False)
 
     def save(self, path: str | Path) -> Path:
         """Save diagram to file."""
