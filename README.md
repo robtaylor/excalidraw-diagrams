@@ -1,29 +1,38 @@
 # Excalidraw Diagrams - Claude Code Skill
 
-A [Claude Code](https://claude.ai/claude-code) skill for generating [Excalidraw](https://excalidraw.com) diagrams programmatically. Create flowcharts, architecture diagrams, and system designs without ASCII art.
+A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skill for generating [Excalidraw](https://excalidraw.com) diagrams programmatically. Create flowcharts, architecture diagrams, and system designs without ASCII art.
 
 ## Installation
 
-### Quick Install (Recommended)
+### Option 1: Personal Skill (Recommended for Individual Use)
+
+Clone directly to your Claude Code skills directory:
 
 ```bash
 git clone https://github.com/robtaylor/excalidraw-diagrams ~/.claude/skills/excalidraw-diagrams
 ```
 
-### Manual Install
+Restart Claude Code or start a new session to activate the skill.
 
-1. Create the skills directory if it doesn't exist:
-   ```bash
-   mkdir -p ~/.claude/skills
-   ```
+### Option 2: Project Skill (For Team Collaboration)
 
-2. Clone this repository:
-   ```bash
-   cd ~/.claude/skills
-   git clone https://github.com/robtaylor/excalidraw-diagrams
-   ```
+Add to your project's `.claude/skills/` directory:
 
-3. Restart Claude Code to pick up the new skill.
+```bash
+cd your-project
+mkdir -p .claude/skills
+git clone https://github.com/robtaylor/excalidraw-diagrams .claude/skills/excalidraw-diagrams
+# Or add as a git submodule:
+git submodule add https://github.com/robtaylor/excalidraw-diagrams .claude/skills/excalidraw-diagrams
+```
+
+Commit to your repository - team members will automatically get the skill when they pull.
+
+### Option 3: Update an Existing Installation
+
+```bash
+cd ~/.claude/skills/excalidraw-diagrams && git pull
+```
 
 ## Usage
 
@@ -42,21 +51,22 @@ Claude will generate `.excalidraw` files that you can:
 
 ## Example Output
 
-The skill generates professional diagrams like:
+The skill generates professional diagrams with:
+- Hand-drawn aesthetic
+- Color-coded components
+- Editable after generation
+- Export to PNG/SVG
 
+Instead of ASCII art like this:
 ```
 ┌──────────┐    REST API    ┌──────────┐      SQL      ┌──────────┐
 │ Frontend │ ──────────────▶│ Backend  │ ─────────────▶│ Database │
 └──────────┘                └──────────┘               └──────────┘
 ```
 
-But as actual Excalidraw diagrams with:
-- Hand-drawn aesthetic
-- Color-coded components
-- Editable after generation
-- Professional appearance
+You get real Excalidraw diagrams you can edit, style, and export.
 
-## API
+## API Reference
 
 The skill provides three diagram builders:
 
@@ -105,10 +115,18 @@ arch.save("architecture.excalidraw")
 
 Available colors: `blue`, `green`, `red`, `yellow`, `orange`, `violet`, `cyan`, `teal`, `gray`, `black`
 
+Each color has a matching light background for filled shapes.
+
 ## Requirements
 
 - Python 3.8+
 - No external dependencies (uses only standard library)
+
+## Viewing Generated Diagrams
+
+1. **Excalidraw.com** - Drag and drop the `.excalidraw` file
+2. **VS Code** - Install the [Excalidraw extension](https://marketplace.visualstudio.com/items?itemName=pomdtr.excalidraw-editor)
+3. **Obsidian** - Use the [Excalidraw plugin](https://github.com/zsviczian/obsidian-excalidraw-plugin)
 
 ## License
 
@@ -118,7 +136,13 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 Contributions welcome! Please open an issue or PR.
 
+Ideas for contributions:
+- Additional diagram types (sequence diagrams, ER diagrams, etc.)
+- More shape types
+- Improved auto-layout algorithms
+- Integration with other tools
+
 ## Credits
 
 - [Excalidraw](https://excalidraw.com) - The fantastic open-source whiteboard tool
-- [Claude Code](https://claude.ai/claude-code) - Anthropic's CLI for Claude
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) - Anthropic's CLI for Claude

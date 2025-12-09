@@ -21,7 +21,8 @@ Write a Python script using the generator library and run it:
 ```python
 #!/usr/bin/env python3
 import sys
-sys.path.insert(0, "/Users/roberttaylor/.claude/skills/excalidraw-diagrams/scripts")
+import os
+sys.path.insert(0, os.path.expanduser("~/.claude/skills/excalidraw-diagrams/scripts"))
 from excalidraw_generator import Diagram, Flowchart, ArchitectureDiagram
 
 # Create your diagram
@@ -41,8 +42,8 @@ python3 /path/to/your_script.py
 
 ```bash
 python3 -c "
-import sys
-sys.path.insert(0, '/Users/roberttaylor/.claude/skills/excalidraw-diagrams/scripts')
+import sys, os
+sys.path.insert(0, os.path.expanduser('~/.claude/skills/excalidraw-diagrams/scripts'))
 from excalidraw_generator import Diagram
 
 d = Diagram()
@@ -209,8 +210,8 @@ Available colors (stroke color, with matching light background):
 ### Example 1: Simple Flow
 
 ```python
-import sys
-sys.path.insert(0, "/Users/roberttaylor/.claude/skills/excalidraw-diagrams/scripts")
+import sys, os
+sys.path.insert(0, os.path.expanduser("~/.claude/skills/excalidraw-diagrams/scripts"))
 from excalidraw_generator import Diagram
 
 d = Diagram()
@@ -233,8 +234,8 @@ d.save("pipeline.excalidraw")
 ### Example 2: Decision Flowchart
 
 ```python
-import sys
-sys.path.insert(0, "/Users/roberttaylor/.claude/skills/excalidraw-diagrams/scripts")
+import sys, os
+sys.path.insert(0, os.path.expanduser("~/.claude/skills/excalidraw-diagrams/scripts"))
 from excalidraw_generator import Flowchart
 
 fc = Flowchart(direction="vertical", spacing=100)
@@ -264,8 +265,8 @@ fc.save("auth_flow.excalidraw")
 ### Example 3: Microservices Architecture
 
 ```python
-import sys
-sys.path.insert(0, "/Users/roberttaylor/.claude/skills/excalidraw-diagrams/scripts")
+import sys, os
+sys.path.insert(0, os.path.expanduser("~/.claude/skills/excalidraw-diagrams/scripts"))
 from excalidraw_generator import ArchitectureDiagram
 
 arch = ArchitectureDiagram()
