@@ -145,6 +145,7 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: "--allowedTools Write,Read,Bash,Glob,Grep,Skill"
           prompt: |
             I want to verify the excalidraw-diagrams skill is working correctly.
 
