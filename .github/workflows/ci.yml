@@ -145,8 +145,7 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          mode: agent
-          direct_prompt: |
+          prompt: |
             I want to verify the excalidraw-diagrams skill is working correctly.
 
             Please do the following:
@@ -156,8 +155,6 @@ jobs:
 
             Use the excalidraw-diagrams skill to generate this diagram.
             Report success or failure.
-          allowed_tools: "Bash,Read,Write,Glob,Grep"
-          max_turns: 10
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
