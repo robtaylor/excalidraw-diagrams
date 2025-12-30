@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Excalidraw Diagram Gallery - AI Generated</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card-bg: #161b22;
+      --text: #c9d1d9;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --border: #30363d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+      background: var(--bg);
+      color: var(--text);
+    }
+    h1 { color: var(--text); margin-bottom: 8px; }
+    .subtitle { color: var(--text-muted); margin-bottom: 24px; }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 24px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .card img {
+      width: 100%;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+    }
+    .card h3 {
+      margin: 16px 0 8px 0;
+      color: var(--accent);
+      font-size: 1.1em;
+    }
+    .card .description {
+      color: var(--text-muted);
+      margin: 0 0 12px 0;
+      font-size: 14px;
+    }
+    .card details {
+      margin: 12px 0;
+      font-size: 13px;
+    }
+    .card summary {
+      cursor: pointer;
+      color: var(--accent);
+    }
+    .card .prompt {
+      color: var(--text-muted);
+      background: var(--bg);
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .actions {
+      margin-top: 12px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 8px 16px;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+    .stats {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 32px;
+    }
+    .stat {
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 2em;
+      font-weight: bold;
+      color: var(--accent);
+    }
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 12px;
+      text-align: center;
+    }
+    footer a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <h1>Excalidraw Diagram Gallery</h1>
+  <p class="subtitle">AI-generated diagrams using Claude Code with the excalidraw-diagrams skill</p>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value">10</div>
+      <div class="stat-label">Diagrams Generated</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">10</div>
+      <div class="stat-label">Test Prompts</div>
+    </div>
+  </div>
+
+  <div class="gallery">
+    
+    <div class="card">
+      <a href="cicd_pipeline.png" target="_blank">
+        <img src="cicd_pipeline.png" alt="CI/CD Pipeline" loading="lazy">
+      </a>
+      <h3>CI/CD Pipeline</h3>
+      <p class="description">GitHub Actions deployment workflow</p>
+      <details>
+        <summary>View prompt</summary>
+        <p class="prompt">Create a flowchart showing a CI/CD pipeline: Developer pushes code -> GitHub triggers workflow -> Run Tests (decision: pass/fail) -> if fail, notify developer and stop -> if pass, Build Docker Image -> Push to Registry -> Deploy to Staging -> Run E2E Tests (decision) -> if pass, Deploy to Production -> Send success notification. Save as 'cicd_pipeline.excalidraw'.</p>
+      </details>
+      <div class="actions">
+        <a href="cicd_pipeline.excalidraw" download class="btn">Download .excalidraw</a>
+      </div>
+    </div>
+    
+    <div class="card">
+      <a href="class_diagram.png" target="_blank">
+        <img src="class_diagram.png" alt="Class Hierarchy" loading="lazy">
+      </a>
+      <h3>Class Hierarchy</h3>
+      <p class="description">Vehicle class inheritance</p>
+      <details>
+        <summary>View prompt</summary>
+        <p class="prompt">Create a UML class diagram showing: Vehicle (base class with properties: make, model, year and methods: start(), stop()) -> Car (extends Vehicle, adds: numDoors, trunk_capacity) and Motorcycle (extends Vehicle, adds: hasSidecar). Also show an Engine class that Vehicle has-a relationship with. Save as 'class_diagram.excalidraw'.</p>
+      </details>
+      <div class="actions">
+        <a href="class_diagram.excalidraw" download class="btn">Download .excalidraw</a>
+      </div>
+    </div>
+    
+    <div class="card">
+      <a href="data_flow.png" target="_blank">
+        <img src="data_flow.png" alt="Data Pipeline" loading="lazy">
+      </a>
+      <h3>Data Pipeline</h3>
+      <p class="description">ETL data processing flow</p>
+      <details>
+        <summary>View prompt</summary>
+        <p class="prompt">Create a data flow diagram showing an ETL pipeline: Data Sources (API, Database, S3) -> Ingestion Layer (Kafka) -> Processing (Spark jobs for Transform, Validate, Enrich) -> Data Warehouse (Snowflake) -> Analytics (Dashboards, Reports, ML Models). Use different colors for each stage. Save as 'data_flow.excalidraw'.</p>
+      </details>
+      <div class="actions">
+        <a href="data_flow.excalidraw" download class="btn">Download .excalidraw</a>
+      </div>
+    </div>
+    
+    <div class="card">
+      <a href="decision_tree.png" target="_blank">
+        <img src="decision_tree.png" alt="Support Ticket Routing" loading="lazy">
+      </a>
+      <h3>Support Ticket Routing</h3>
+      <p class="description">Customer support triage logic</p>
+      <details>
+        <summary>View prompt</summary>
+        <p class="prompt">Create a decision tree flowchart for support ticket routing: New Ticket -> Is it urgent? (Yes: Priority Queue) -> Is it billing related? (Yes: Billing Team, No: next check) -> Is it technical? (Yes: check complexity) -> Simple issue? (Yes: Tier 1 Support, No: Tier 2 Support) -> Default: General Support. Use diamond shapes for decisions. Save as 'decision_tree.excalidraw'.</p>
+      </details>
+      <div class="actions">
+        <a href="decision_tree.excalidraw" download class="btn">Download .excalidraw</a>
+      </div>
+    </div>
+    
+    <div class="card">
+      <a href="deployment.png" target="_blank">
+        <img src="deployment.png" alt="Kubernetes Deployment" loading="lazy">
+      </a>
+      <h3>Kubernetes Deployment</h3>
+      <p class="description">K8s cluster architecture</p>
+      <details>
+        <summary>View prompt</summary>
+        <p class="prompt">Create a deployment architecture diagram: Kubernetes Cluster containing: Ingress Controller -> Service (ClusterIP) -> Deployment with 3 Pod replicas -> each Pod has App Container and Sidecar. Show ConfigMap and Secret connecting to Pods. Show PersistentVolumeClaim connecting to Pods. External: Container Registry and Monitoring (Prometheus/Grafana). Save as 'deployment.excalidraw'.</p>
+      </details>
+      <div class="actions">
+        <a href="deployment.excalidraw" download class="btn">Download .excalidraw</a>
+      </div>
+    </div>
+    
+    <div class="card">
+      <a href="event_driven.png" target="_blank">
+        <img src="event_driven.png" alt="Event-Driven Architecture" loading="lazy">
+      </a>
+      <h3>Event-Driven Architecture</h3>
+      <p class="description">Async messaging with events</p>
+      <details>
+        <summary>View prompt</summary>
+        <p class="prompt">Create an architecture diagram for event-driven system: Order Service publishes OrderCreated event -> Event Bus (Kafka/SNS) -> multiple consumers: Inventory Service (reserves stock), Notification Service (sends email), Analytics Service (tracks metrics), Shipping Service (prepares label). Show the event flow with arrows. Save as 'event_driven.excalidraw'.</p>
+      </details>
+      <div class="actions">
+        <a href="event_driven.excalidraw" download class="btn">Download .excalidraw</a>
+      </div>
+    </div>
+    
+    <div class="card">
+      <a href="microservices.png" target="_blank">
+        <img src="microservices.png" alt="Microservices Architecture" loading="lazy">
+      </a>
+      <h3>Microservices Architecture</h3>
+      <p class="description">E-commerce platform with multiple services</p>
+      <details>
+        <summary>View prompt</summary>
+        <p class="prompt">Create an architecture diagram for an e-commerce platform showing: User, Web Frontend, API Gateway, Auth Service, Product Service, Order Service, Payment Service, and PostgreSQL and Redis databases. Show the connections between services with labels for the protocols (REST, gRPC). Save as 'microservices.excalidraw'.</p>
+      </details>
+      <div class="actions">
+        <a href="microservices.excalidraw" download class="btn">Download .excalidraw</a>
+      </div>
+    </div>
+    
+    <div class="card">
+      <a href="network_topology.png" target="_blank">
+        <img src="network_topology.png" alt="Network Architecture" loading="lazy">
+      </a>
+      <h3>Network Architecture</h3>
+      <p class="description">Cloud VPC network layout</p>
+      <details>
+        <summary>View prompt</summary>
+        <p class="prompt">Create a network architecture diagram showing: Internet -> Load Balancer -> Public Subnet (with NAT Gateway and Bastion Host) -> Private Subnet (with Web Servers and App Servers) -> Database Subnet (with Primary DB and Read Replica). Show the VPC boundary and subnet boundaries. Save as 'network_topology.excalidraw'.</p>
+      </details>
+      <div class="actions">
+        <a href="network_topology.excalidraw" download class="btn">Download .excalidraw</a>
+      </div>
+    </div>
+    
+    <div class="card">
+      <a href="state_machine.png" target="_blank">
+        <img src="state_machine.png" alt="Order State Machine" loading="lazy">
+      </a>
+      <h3>Order State Machine</h3>
+      <p class="description">E-commerce order lifecycle states</p>
+      <details>
+        <summary>View prompt</summary>
+        <p class="prompt">Create a state machine diagram for an e-commerce order: states are Created, Pending Payment, Paid, Processing, Shipped, Delivered, Cancelled, Refunded. Show transitions with event labels like 'payment_received', 'items_packed', 'delivered', 'cancel_requested', 'refund_approved'. Use a horizontal layout. Save as 'state_machine.excalidraw'.</p>
+      </details>
+      <div class="actions">
+        <a href="state_machine.excalidraw" download class="btn">Download .excalidraw</a>
+      </div>
+    </div>
+    
+    <div class="card">
+      <a href="user_journey.png" target="_blank">
+        <img src="user_journey.png" alt="User Registration Flow" loading="lazy">
+      </a>
+      <h3>User Registration Flow</h3>
+      <p class="description">User signup and onboarding</p>
+      <details>
+        <summary>View prompt</summary>
+        <p class="prompt">Create a flowchart for user registration: Start -> Enter Email -> Validate Email Format (decision) -> if invalid, show error and loop back -> Check if Email Exists (decision) -> if exists, prompt login -> Enter Password -> Validate Password Strength -> Create Account -> Send Verification Email -> User Clicks Link -> Account Verified -> Onboarding Tutorial -> End. Save as 'user_journey.excalidraw'.</p>
+      </details>
+      <div class="actions">
+        <a href="user_journey.excalidraw" download class="btn">Download .excalidraw</a>
+      </div>
+    </div>
+    
+  </div>
+
+  <footer>
+    Generated on 2025-12-30 04:38 UTC by
+    <a href="https://github.com/robtaylor/excalidraw-diagrams">excalidraw-diagrams</a> |
+    <a href="https://github.com/robtaylor/excalidraw-diagrams/actions">View CI Runs</a>
+  </footer>
+</body>
+</html>
