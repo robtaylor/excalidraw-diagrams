@@ -369,7 +369,7 @@ jobs:
           ls -la /tmp/prompt-gallery/ 2>/dev/null || echo "No gallery files to save"
 
       - name: Deploy to GitHub Pages
-        if: github.ref == 'refs/heads/main'
+        id: deploy
         run: |
           # Configure git
           git config user.name "github-actions[bot]"
@@ -384,13 +384,22 @@ jobs:
             git rm -rf . 2>/dev/null || true
           fi
 
-          # Create prompt-gallery subdirectory
-          rm -rf prompt-gallery 2>/dev/null || true
-          mkdir -p prompt-gallery
-          cp -r /tmp/prompt-gallery/* prompt-gallery/
+          # Determine deploy path based on event type
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            DEPLOY_PATH="pr-${{ github.event.pull_request.number }}"
+            COMMIT_MSG="Update prompt gallery for PR #${{ github.event.pull_request.number }}"
+          else
+            DEPLOY_PATH="prompt-gallery"
+            COMMIT_MSG="Update prompt gallery from CI run ${{ github.run_number }}"
+          fi
 
-          # Update main gallery page to link to prompt gallery
-          if [ -f index.html ]; then
+          # Create deploy subdirectory
+          rm -rf "$DEPLOY_PATH" 2>/dev/null || true
+          mkdir -p "$DEPLOY_PATH"
+          cp -r /tmp/prompt-gallery/* "$DEPLOY_PATH/"
+
+          # Update main gallery page to link to prompt gallery (only for main branch)
+          if [ "${{ github.ref }}" == "refs/heads/main" ] && [ -f index.html ]; then
             # Add link to prompt gallery if not already present
             if ! grep -q "prompt-gallery" index.html; then
               sed -i 's|</body>|<p style="margin-top: 20px; text-align: center;"><a href="prompt-gallery/" style="color: #1a73e8;">View AI-Generated Prompt Gallery →</a></p></body>|' index.html
@@ -399,8 +408,12 @@ jobs:
 
           # Commit and push
           git add .
-          git commit -m "Update prompt gallery from CI run ${{ github.run_number }}" || echo "No changes"
+          git commit -m "$COMMIT_MSG" || echo "No changes"
           git push origin gh-pages --force
+
+          # Output the gallery URL for PR comments
+          echo "deploy_path=$DEPLOY_PATH" >> $GITHUB_OUTPUT
+          echo "gallery_url=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/$DEPLOY_PATH/" >> $GITHUB_OUTPUT
 
       - name: Generate step summary
         if: always()
@@ -458,8 +471,9 @@ jobs:
           fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "🌐 **[View Gallery](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/prompt-gallery/)**" >> $GITHUB_STEP_SUMMARY
+          GALLERY_URL="${{ steps.deploy.outputs.gallery_url }}"
+          if [ -n "$GALLERY_URL" ]; then
+            echo "🌐 **[View Gallery]($GALLERY_URL)**" >> $GITHUB_STEP_SUMMARY
           else
             echo "📦 Download the **prompt-gallery** artifact to view results" >> $GITHUB_STEP_SUMMARY
           fi
@@ -475,6 +489,9 @@ jobs:
             const errors = '${{ steps.validate.outputs.errors }}' || '0';
             const warnings = '${{ steps.validate.outputs.warnings }}' || '0';
             const info = '${{ steps.validate.outputs.info }}' || '0';
+
+            // Get gallery URL from deploy step
+            const galleryUrl = '${{ steps.deploy.outputs.gallery_url }}';
 
             // Count diagrams
             let generated = 0;
@@ -521,7 +538,7 @@ ${validationDetails}
 
 </details>
 
-📦 Download the **prompt-gallery** artifact to view the generated diagrams.
+🌐 **[View Gallery](${galleryUrl})**
 `;
 
             // Find existing comment to update
