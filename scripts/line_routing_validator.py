@@ -337,8 +337,111 @@ class LineRoutingValidator:
 
         return connected
 
+    def _get_edge_from_direction(
+        self, box: Box, point: Point, direction: Point, is_start: bool
+    ) -> Tuple[str, Point]:
+        """Determine which edge a line is entering/exiting based on its direction.
+
+        Uses the line direction to determine which edge is being crossed,
+        rather than just which edge is closest to the point.
+        """
+        # For start (exit), direction points away from box
+        # For end (enter), direction points toward box
+        # We want to find which edge the line is crossing
+
+        left, top, right, bottom = box.bounds
+
+        # First, check which edges the point is near
+        edge_distances = {
+            "left": abs(point.x - left),
+            "right": abs(point.x - right),
+            "top": abs(point.y - top),
+            "bottom": abs(point.y - bottom),
+        }
+
+        # Find edges that are close (within margin)
+        margin = 20
+        close_edges = [e for e, d in edge_distances.items() if d < margin]
+
+        # If only one edge is close, use it
+        if len(close_edges) == 1:
+            edge = close_edges[0]
+        elif len(close_edges) >= 2:
+            # Point is near a corner - use direction to determine actual edge
+            # Direction tells us which way the line is going
+            dx, dy = direction.x, direction.y
+
+            # For exit (is_start=True): direction points away, so the edge
+            # is perpendicular to the direction
+            # For entry (is_start=False): direction points toward box
+            if is_start:
+                # Exiting - direction is outward
+                if abs(dx) > abs(dy):
+                    # Horizontal movement - crossing left or right edge
+                    edge = "right" if dx > 0 else "left"
+                else:
+                    # Vertical movement - crossing top or bottom edge
+                    edge = "bottom" if dy > 0 else "top"
+            else:
+                # Entering - direction is inward
+                if abs(dx) > abs(dy):
+                    # Horizontal movement - crossing left or right edge
+                    edge = "left" if dx > 0 else "right"
+                else:
+                    # Vertical movement - crossing top or bottom edge
+                    edge = "top" if dy > 0 else "bottom"
+        else:
+            # Fall back to closest edge
+            edge = min(edge_distances, key=edge_distances.get)
+
+        normals = {
+            "left": Point(-1, 0),
+            "right": Point(1, 0),
+            "top": Point(0, -1),
+            "bottom": Point(0, 1),
+        }
+        return edge, normals[edge]
+
+    def _detect_container_boxes(self) -> Set[str]:
+        """Detect boxes that act as containers (contain other boxes).
+
+        A container box is one that:
+        1. Is significantly larger than average
+        2. Contains the bounds of at least one other box
+        """
+        if len(self.boxes) < 2:
+            return set()
+
+        # Calculate average box area
+        areas = [b.width * b.height for b in self.boxes]
+        avg_area = sum(areas) / len(areas)
+
+        containers = set()
+        for outer in self.boxes:
+            outer_area = outer.width * outer.height
+            # Container must be at least 3x larger than average
+            if outer_area < avg_area * 3:
+                continue
+
+            # Check if it contains other boxes
+            outer_left, outer_top, outer_right, outer_bottom = outer.bounds
+            for inner in self.boxes:
+                if inner.id == outer.id:
+                    continue
+                inner_left, inner_top, inner_right, inner_bottom = inner.bounds
+                # Check if inner is fully contained in outer
+                if (outer_left <= inner_left and inner_right <= outer_right and
+                    outer_top <= inner_top and inner_bottom <= outer_bottom):
+                    containers.add(outer.id)
+                    break
+
+        return containers
+
     def _check_lines_crossing_boxes(self):
         """Check for lines that pass through boxes they shouldn't."""
+        # Detect container boxes that arrows can pass through
+        container_ids = self._detect_container_boxes()
+
         for arrow in self.arrows:
             connected = self._get_connected_boxes(arrow)
 
@@ -349,6 +452,10 @@ class LineRoutingValidator:
                 for box in self.boxes:
                     # Skip boxes this arrow is connected to
                     if box.id in connected:
+                        continue
+
+                    # Skip container boxes (arrows may intentionally cross them)
+                    if box.id in container_ids:
                         continue
 
                     if segment.intersects_box(box):
@@ -395,26 +502,26 @@ class LineRoutingValidator:
         if not target_box:
             return  # Not connected to a box
 
-        # Get the edge and normal
-        edge, normal = target_box.get_edge_normal(entry_point)
+        # Get segment direction
+        direction = segment.direction
 
-        # Calculate the angle between segment direction and the normal
-        # We want the direction of the line as it approaches the box
+        # Determine which edge based on the line direction, not just point position
+        # This is more accurate for detecting actual entry/exit edges
+        edge, normal = self._get_edge_from_direction(target_box, entry_point, direction, is_start)
+
+        # We want angle from perpendicular entry, so compare with the appropriate normal
+        # For end points (entering), compare with inward normal
+        # For start points (exiting), compare with outward normal
         if is_start:
-            # For start point, the arrow LEAVES from here, so the approach
-            # direction is from the second point toward the first
-            direction = segment.direction  # Points away from box
+            # Arrow exits from this box - direction should align with outward normal
+            compare_normal = normal
         else:
-            # For end point, the arrow ARRIVES here
-            direction = segment.direction  # Points toward box
+            # Arrow enters this box - direction should align with inward normal
+            compare_normal = Point(-normal.x, -normal.y)
 
-        # We want angle from perpendicular entry, so compare with inward normal
-        # The inward normal is opposite of the outward normal
-        inward_normal = Point(-normal.x, -normal.y)
-
-        # For the entry to be perpendicular, direction should align with inward normal
+        # For the entry to be perpendicular, direction should align with compare_normal
         # We compute the acute angle between them
-        dot = abs(direction.x * inward_normal.x + direction.y * inward_normal.y)
+        dot = abs(direction.x * compare_normal.x + direction.y * compare_normal.y)
         # Clamp to avoid floating point issues
         dot = max(0, min(1, dot))
         angle_from_perpendicular = math.degrees(math.acos(dot))
