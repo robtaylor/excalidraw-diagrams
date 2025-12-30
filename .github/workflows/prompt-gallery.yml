@@ -490,8 +490,11 @@ jobs:
             const warnings = '${{ steps.validate.outputs.warnings }}' || '0';
             const info = '${{ steps.validate.outputs.info }}' || '0';
 
-            // Get gallery URL from deploy step
-            const galleryUrl = '${{ steps.deploy.outputs.gallery_url }}';
+            // Construct gallery URL directly (more reliable than step output)
+            const owner = '${{ github.repository_owner }}';
+            const repo = '${{ github.event.repository.name }}';
+            const prNumber = '${{ github.event.pull_request.number }}';
+            const galleryUrl = `https://${owner}.github.io/${repo}/pr-${prNumber}/`;
 
             // Count diagrams
             let generated = 0;
