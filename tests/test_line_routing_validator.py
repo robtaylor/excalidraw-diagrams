@@ -256,13 +256,29 @@ class TestStraightLineAngles(unittest.TestCase):
         # Left edge has inward normal (1, 0) - perpendicular entry is horizontal
         # A line coming in at >45° from horizontal should warn
         #
-        # Direction (10, 60) -> angle from horizontal = atan(60/10) = 80°
-        # Which is 80° from perpendicular (horizontal) - should trigger
+        # For this test, we need the line to clearly enter the left edge
+        # at a diagonal angle. The line should be mostly horizontal but
+        # with enough vertical component to trigger the warning.
+        #
+        # Start at (0, 80), end at (100, 120) - enters left edge diagonally
+        # Direction is (100, 40), about 22° from horizontal
+        # For left edge (perpendicular = horizontal), 22° is acceptable.
+        #
+        # Instead, use a steeper angle: start at (0, 60), end at (100, 120)
+        # Direction is (100, 60), about 31° from horizontal - still ok
+        #
+        # For a clear bad angle: start at (0, 50), end at (100, 130)
+        # Direction is (100, 80), about 39° from horizontal - borderline
+        #
+        # Use: start at (0, 30), end at (100, 130)
+        # Direction is (100, 100), 45° from horizontal - exactly at threshold
+        #
+        # Use: start at (0, 20), end at (100, 130)
+        # Direction is (100, 110), about 48° from horizontal - should trigger
         diagram = make_diagram([
-            make_box("box1", 100, 100, 80, 40),
-            # Start at (90, 40), end at (100, 100) - enters left edge from above
-            # Direction is (10, 60), about 80° from horizontal
-            make_arrow("arr1", 90, 40, [[0, 0], [10, 70]], elbowed=False),
+            make_box("box1", 100, 100, 80, 60),
+            # Start at (0, 20), end at (100, 130) - enters left edge at ~48° angle
+            make_arrow("arr1", 0, 20, [[0, 0], [100, 110]], elbowed=False),
         ])
 
         issues = validate_diagram_data(diagram)

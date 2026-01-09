@@ -7,6 +7,18 @@ on:
     paths:
       - 'tests/prompts.json'
       - 'scripts/excalidraw_generator.py'
+      - 'scripts/layout_engine.py'
+      - 'scripts/line_routing_validator.py'
+      - 'SKILL.md'
+      - '.github/workflows/prompt-gallery.yml'
+  # Run on pull requests
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tests/prompts.json'
+      - 'scripts/excalidraw_generator.py'
+      - 'scripts/layout_engine.py'
+      - 'scripts/line_routing_validator.py'
       - 'SKILL.md'
       - '.github/workflows/prompt-gallery.yml'
   # Allow manual trigger
@@ -19,11 +31,12 @@ jobs:
   generate-gallery:
     name: Generate Prompt Gallery
     runs-on: ubuntu-latest
-    # Only run if ANTHROPIC_API_KEY is available
-    if: github.repository == 'robtaylor/excalidraw-diagrams'
+    # Only run if ANTHROPIC_API_KEY is available (not on forks)
+    if: github.repository == 'robtaylor/excalidraw-diagrams' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     permissions:
       contents: write
       id-token: write
+      pull-requests: write  # For PR comments
 
     steps:
       - uses: actions/checkout@v4
@@ -348,15 +361,19 @@ jobs:
           name: prompt-gallery
           path: gallery_output/
 
+      - name: Save gallery to temp location
+        if: always()
+        run: |
+          # Save gallery files to /tmp for later steps (survives gh-pages switch)
+          cp -r gallery_output /tmp/prompt-gallery || true
+          ls -la /tmp/prompt-gallery/ 2>/dev/null || echo "No gallery files to save"
+
       - name: Deploy to GitHub Pages
-        if: github.ref == 'refs/heads/main'
+        id: deploy
         run: |
           # Configure git
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Save gallery files
-          cp -r gallery_output /tmp/prompt-gallery
 
           # Clean and switch to gh-pages
           git clean -fd
@@ -367,13 +384,22 @@ jobs:
             git rm -rf . 2>/dev/null || true
           fi
 
-          # Create prompt-gallery subdirectory
-          rm -rf prompt-gallery 2>/dev/null || true
-          mkdir -p prompt-gallery
-          cp -r /tmp/prompt-gallery/* prompt-gallery/
+          # Determine deploy path based on event type
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            DEPLOY_PATH="pr-${{ github.event.pull_request.number }}"
+            COMMIT_MSG="Update prompt gallery for PR #${{ github.event.pull_request.number }}"
+          else
+            DEPLOY_PATH="prompt-gallery"
+            COMMIT_MSG="Update prompt gallery from CI run ${{ github.run_number }}"
+          fi
 
-          # Update main gallery page to link to prompt gallery
-          if [ -f index.html ]; then
+          # Create deploy subdirectory
+          rm -rf "$DEPLOY_PATH" 2>/dev/null || true
+          mkdir -p "$DEPLOY_PATH"
+          cp -r /tmp/prompt-gallery/* "$DEPLOY_PATH/"
+
+          # Update main gallery page to link to prompt gallery (only for main branch)
+          if [ "${{ github.ref }}" == "refs/heads/main" ] && [ -f index.html ]; then
             # Add link to prompt gallery if not already present
             if ! grep -q "prompt-gallery" index.html; then
               sed -i 's|</body>|<p style="margin-top: 20px; text-align: center;"><a href="prompt-gallery/" style="color: #1a73e8;">View AI-Generated Prompt Gallery →</a></p></body>|' index.html
@@ -382,8 +408,12 @@ jobs:
 
           # Commit and push
           git add .
-          git commit -m "Update prompt gallery from CI run ${{ github.run_number }}" || echo "No changes"
+          git commit -m "$COMMIT_MSG" || echo "No changes"
           git push origin gh-pages --force
+
+          # Output the gallery URL for PR comments
+          echo "deploy_path=$DEPLOY_PATH" >> $GITHUB_OUTPUT
+          echo "gallery_url=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/$DEPLOY_PATH/" >> $GITHUB_OUTPUT
 
       - name: Generate step summary
         if: always()
@@ -441,8 +471,103 @@ jobs:
           fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "🌐 **[View Gallery](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/prompt-gallery/)**" >> $GITHUB_STEP_SUMMARY
+          GALLERY_URL="${{ steps.deploy.outputs.gallery_url }}"
+          if [ -n "$GALLERY_URL" ]; then
+            echo "🌐 **[View Gallery]($GALLERY_URL)**" >> $GITHUB_STEP_SUMMARY
           else
             echo "📦 Download the **prompt-gallery** artifact to view results" >> $GITHUB_STEP_SUMMARY
           fi
+
+      - name: Comment on PR with validation results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            // Get validation results
+            const errors = '${{ steps.validate.outputs.errors }}' || '0';
+            const warnings = '${{ steps.validate.outputs.warnings }}' || '0';
+            const info = '${{ steps.validate.outputs.info }}' || '0';
+
+            // Construct gallery URL directly (more reliable than step output)
+            const owner = '${{ github.repository_owner }}';
+            const repo = '${{ github.event.repository.name }}';
+            const prNumber = '${{ github.event.pull_request.number }}';
+            const galleryUrl = `https://${owner}.github.io/${repo}/pr-${prNumber}/`;
+
+            // Count diagrams
+            let generated = 0;
+            try {
+              const files = fs.readdirSync('/tmp/prompt-gallery');
+              generated = files.filter(f => f.endsWith('.excalidraw')).length;
+            } catch (e) {
+              console.log('Could not read gallery directory');
+            }
+
+            // Build status emoji
+            let statusEmoji = '✅';
+            let statusText = 'All checks passed';
+            if (parseInt(errors) > 0) {
+              statusEmoji = '❌';
+              statusText = `${errors} routing errors found`;
+            } else if (parseInt(warnings) > 0) {
+              statusEmoji = '⚠️';
+              statusText = `${warnings} warnings found`;
+            }
+
+            // Read validation report if available
+            let validationDetails = '';
+            try {
+              validationDetails = fs.readFileSync('/tmp/prompt-gallery/validation_report.md', 'utf8');
+            } catch (e) {
+              validationDetails = 'No validation report available';
+            }
+
+            const body = `## 🎨 Prompt Gallery Results
+
+${statusEmoji} **${statusText}**
+
+| Metric | Count |
+|--------|-------|
+| Diagrams Generated | ${generated} |
+| Routing Errors | ${errors} |
+| Routing Warnings | ${warnings} |
+
+<details>
+<summary>View validation details</summary>
+
+${validationDetails}
+
+</details>
+
+🌐 **[View Gallery](${galleryUrl})**
+`;
+
+            // Find existing comment to update
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' &&
+              c.body.includes('Prompt Gallery Results')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body,
+              });
+            }

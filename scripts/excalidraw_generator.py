@@ -1046,18 +1046,7 @@ class Diagram:
         """
         # Determine connection points
         if from_side == "auto" and to_side == "auto":
-            # Auto-detect best sides based on relative position
-            dx = target.center_x - source.center_x
-            dy = target.center_y - source.center_y
-
-            if abs(dx) > abs(dy):
-                # Horizontal connection
-                from_side = "right" if dx > 0 else "left"
-                to_side = "left" if dx > 0 else "right"
-            else:
-                # Vertical connection
-                from_side = "bottom" if dy > 0 else "top"
-                to_side = "top" if dy > 0 else "bottom"
+            from_side, to_side = self._auto_detect_sides(source, target)
 
         # Get start point
         if from_side == "right":
@@ -1082,10 +1071,10 @@ class Diagram:
         dx = ex - sx
         dy = ey - sy
 
-        # For orthogonal routing, build path that respects entry/exit directions
+        # Determine if orthogonal routing should be used
         threshold = self.routing.alignment_threshold
-        use_orthogonal = routing == "orthogonal" or (
-            routing == "auto" and abs(dx) > threshold and abs(dy) > threshold
+        use_orthogonal = self._should_use_orthogonal(
+            routing, dx, dy, threshold, from_side, to_side
         )
 
         if use_orthogonal:
@@ -1101,6 +1090,116 @@ class Diagram:
                 stroke_width=self.style.stroke_width,
             )
             self.elements.extend(elems)
+
+    def _auto_detect_sides(
+        self, source: Element, target: Element
+    ) -> tuple:
+        """Auto-detect the best sides for connecting two elements.
+
+        Considers the relative positions and ensures the resulting connection
+        will have an acceptable entry angle. For diagonal connections, prefers
+        routing that minimizes horizontal spans at intermediate y-levels
+        to reduce the chance of crossing through other boxes.
+        """
+        dx = target.center_x - source.center_x
+        dy = target.center_y - source.center_y
+
+        # Check if elements are well-aligned (small offset in one direction)
+        threshold = self.routing.alignment_threshold
+
+        # If well-aligned horizontally (small dy), use left/right
+        if abs(dy) < threshold:
+            from_side = "right" if dx > 0 else "left"
+            to_side = "left" if dx > 0 else "right"
+            return from_side, to_side
+
+        # If well-aligned vertically (small dx), use top/bottom
+        if abs(dx) < threshold:
+            from_side = "bottom" if dy > 0 else "top"
+            to_side = "top" if dy > 0 else "bottom"
+            return from_side, to_side
+
+        # Elements are diagonal - determine best routing based on position
+        # Check for overlapping x-ranges
+        x_overlap = not (source.right < target.left or target.right < source.left)
+        # Check for overlapping y-ranges
+        y_overlap = not (source.bottom < target.top or target.bottom < source.top)
+
+        if y_overlap and not x_overlap:
+            # Elements at same y-level but different x - use horizontal
+            from_side = "right" if dx > 0 else "left"
+            to_side = "left" if dx > 0 else "right"
+        elif x_overlap and not y_overlap:
+            # Elements at same x-level but different y - use vertical
+            from_side = "bottom" if dy > 0 else "top"
+            to_side = "top" if dy > 0 else "bottom"
+        else:
+            # No overlap - elements are truly diagonal
+            # For diagonal connections, prefer vertical exit when going down
+            # to avoid horizontal segments crossing boxes in the same row.
+            # Horizontal exit is preferred when going up or when the horizontal
+            # distance is much larger than vertical.
+            #
+            # Strategy: minimize horizontal spans at intermediate y-levels
+            if dy > 0:
+                # Target is below source - prefer bottom exit, top entry
+                # This avoids horizontal segments that cross boxes in the same row
+                from_side = "bottom"
+                to_side = "top"
+            elif dy < 0:
+                # Target is above source - prefer top exit, bottom entry
+                from_side = "top"
+                to_side = "bottom"
+            else:
+                # Pure horizontal (shouldn't reach here given earlier checks)
+                from_side = "right" if dx > 0 else "left"
+                to_side = "left" if dx > 0 else "right"
+
+        return from_side, to_side
+
+    def _should_use_orthogonal(
+        self,
+        routing: str,
+        dx: float,
+        dy: float,
+        threshold: float,
+        from_side: str,
+        to_side: str,
+    ) -> bool:
+        """Determine if orthogonal routing should be used.
+
+        Uses orthogonal routing when:
+        - Explicitly requested
+        - Both dx and dy are significant (would create diagonal)
+        - The entry angle would be too steep for a straight line
+        """
+        if routing == "orthogonal":
+            return True
+        if routing == "straight":
+            return False
+
+        # routing == "auto"
+        # Check if both dimensions are significant
+        if abs(dx) <= threshold or abs(dy) <= threshold:
+            return False  # Well-aligned, straight line is fine
+
+        # Check the angle - if it's too steep (close to 45 degrees), use orthogonal
+        # This prevents lines that enter boxes at awkward angles
+        angle_ratio = min(abs(dx), abs(dy)) / max(abs(dx), abs(dy))
+
+        # If ratio is between 0.15 and 0.85, it's an awkward diagonal
+        # For very steep (ratio < 0.15) or very shallow (ratio > 0.85), straight is ok
+        if 0.15 < angle_ratio < 0.85:
+            return True
+
+        # Also use orthogonal when exit and entry directions are perpendicular
+        exit_horizontal = from_side in ("left", "right")
+        entry_horizontal = to_side in ("left", "right")
+        if exit_horizontal != entry_horizontal:
+            # Mixed directions - orthogonal is cleaner
+            return True
+
+        return False
 
     def _build_orthogonal_path(
         self,
