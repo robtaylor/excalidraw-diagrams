@@ -4,41 +4,34 @@ import os
 sys.path.insert(0, os.path.expanduser("~/.claude/skills/excalidraw-diagrams/scripts"))
 from excalidraw_generator import ArchitectureDiagram
 
-# Create event-driven architecture diagram
+# Create event-driven architecture
 arch = ArchitectureDiagram()
 
-# Add title
-arch.text_box(250, 30, "Event-Driven Architecture", font_size=24)
+# Title
+arch.text_box(300, 30, "Event-Driven Architecture", font_size=24)
 
 # Order Service (publisher)
-order_svc = arch.service("order", "Order Service", x=100, y=150, color="blue")
+arch.service("order_service", "Order Service", x=100, y=120, color="blue")
 
-# Event Bus (center)
-event_bus = arch.component("eventbus", "Event Bus\n(Kafka/SNS)", x=350, y=200,
-                          width=180, height=100, color="orange")
+# Event created
+event = arch.component("event", "OrderCreated\nEvent", x=100, y=250, color="yellow", width=140, height=80)
 
-# Event label
-arch.text_box(200, 230, "OrderCreated", font_size=16, color="orange")
+# Event Bus
+arch.component("event_bus", "Event Bus\n(Kafka/SNS)", x=340, y=220, color="violet", width=160, height=100)
 
-# Consumer services (right side, arranged vertically)
-inventory = arch.service("inventory", "Inventory Service\n(reserves stock)",
-                        x=650, y=100, color="violet")
-notification = arch.service("notification", "Notification Service\n(sends email)",
-                           x=650, y=200, color="violet")
-analytics = arch.service("analytics", "Analytics Service\n(tracks metrics)",
-                        x=650, y=300, color="violet")
-shipping = arch.service("shipping", "Shipping Service\n(prepares label)",
-                       x=650, y=400, color="violet")
+# Consumer services (spread out horizontally)
+arch.service("inventory", "Inventory Service\n(reserves stock)", x=100, y=400, color="green")
+arch.service("notification", "Notification Service\n(sends email)", x=300, y=400, color="orange")
+arch.service("analytics", "Analytics Service\n(tracks metrics)", x=500, y=400, color="teal")
+arch.service("shipping", "Shipping Service\n(prepares label)", x=700, y=400, color="cyan")
 
 # Connections
-# Order Service publishes to Event Bus
-arch.connect("order", "eventbus", "publishes")
-
-# Event Bus to all consumers
-arch.connect("eventbus", "inventory", "subscribes")
-arch.connect("eventbus", "notification", "subscribes")
-arch.connect("eventbus", "analytics", "subscribes")
-arch.connect("eventbus", "shipping", "subscribes")
+arch.connect("order_service", "event", "publishes")
+arch.connect("event", "event_bus", "")
+arch.connect("event_bus", "inventory", "consume")
+arch.connect("event_bus", "notification", "consume")
+arch.connect("event_bus", "analytics", "consume")
+arch.connect("event_bus", "shipping", "consume")
 
 arch.save("gallery_output/event_driven.excalidraw")
-print("Created: gallery_output/event_driven.excalidraw")
+print("✓ Created: gallery_output/event_driven.excalidraw")
