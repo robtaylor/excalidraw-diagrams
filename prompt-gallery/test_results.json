@@ -1,0 +1,71 @@
+[
+  {
+    "id": "microservices",
+    "name": "Microservices Architecture",
+    "status": "success",
+    "filepath": "gallery_output/microservices.excalidraw",
+    "elements": 36
+  },
+  {
+    "id": "cicd_pipeline",
+    "name": "CI/CD Pipeline",
+    "status": "success",
+    "filepath": "gallery_output/cicd_pipeline.excalidraw",
+    "elements": 43
+  },
+  {
+    "id": "state_machine",
+    "name": "Order State Machine",
+    "status": "success",
+    "filepath": "gallery_output/state_machine.excalidraw",
+    "elements": 32
+  },
+  {
+    "id": "class_diagram",
+    "name": "Class Hierarchy",
+    "status": "success",
+    "filepath": "gallery_output/class_diagram.excalidraw",
+    "elements": 15
+  },
+  {
+    "id": "data_flow",
+    "name": "Data Pipeline",
+    "status": "success",
+    "filepath": "gallery_output/data_flow.excalidraw",
+    "elements": 34
+  },
+  {
+    "id": "network_topology",
+    "name": "Network Architecture",
+    "status": "success",
+    "filepath": "gallery_output/network_topology.excalidraw",
+    "elements": 34
+  },
+  {
+    "id": "user_journey",
+    "name": "User Registration Flow",
+    "status": "success",
+    "filepath": "gallery_output/user_journey.excalidraw",
+    "elements": 46
+  },
+  {
+    "id": "event_driven",
+    "name": "Event-Driven Architecture",
+    "status": "error",
+    "error": "ArchitectureDiagram.service() got an unexpected keyword argument 'width'"
+  },
+  {
+    "id": "decision_tree",
+    "name": "Support Ticket Routing",
+    "status": "success",
+    "filepath": "gallery_output/decision_tree.excalidraw",
+    "elements": 37
+  },
+  {
+    "id": "deployment",
+    "name": "Kubernetes Deployment",
+    "status": "success",
+    "filepath": "gallery_output/deployment.excalidraw",
+    "elements": 46
+  }
+]
