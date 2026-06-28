@@ -1,4 +1,4 @@
 ## Line Routing Validation
 
 
-**Summary**: 0 errors, 0 warnings, 0 info
+**Summary**: 9 errors, 0 warnings, 0 info
