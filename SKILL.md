@@ -635,7 +635,9 @@ update_in_drive(file_id, "updated_diagram.excalidraw")
 
 ### Complete Workflow: Diagram to Google Doc
 
-Create a diagram, export to PNG, and embed in a Google Doc:
+Create a diagram, export to PNG, and embed in a Google Doc.
+
+> **Requires the separate `google-docs` skill**, which is not bundled here. It provides Google OAuth plus `drive_manager.rb` and `docs_manager.rb`, and must be installed at `~/.claude/skills/google-docs/` because `scripts/drive_helper.py` resolves that path directly. Without it this workflow fails with `DRIVE_MANAGER_NOT_FOUND`. Skip this section if you have not installed it.
 
 ```python
 import sys, os, subprocess, json
@@ -664,7 +666,7 @@ subprocess.run([
     "/tmp/architecture.excalidraw", "/tmp/architecture.png"
 ])
 
-# 4. Upload PNG to Drive and share
+# 4. Upload PNG to Drive and share (requires the google-docs skill)
 drive_script = os.path.expanduser("~/.claude/skills/google-docs/scripts/drive_manager.rb")
 png_result = subprocess.run(
     ["ruby", drive_script, "upload", "--file", "/tmp/architecture.png"],
@@ -677,7 +679,7 @@ png_id = png_data["file"]["id"]
 subprocess.run(["ruby", drive_script, "share", "--file-id", png_id, "--type", "anyone", "--role", "reader"])
 png_url = f"https://drive.google.com/uc?id={png_id}&export=download"
 
-# 5. Create Google Doc with embedded image
+# 5. Create Google Doc with embedded image (requires the google-docs skill)
 docs_script = os.path.expanduser("~/.claude/skills/google-docs/scripts/docs_manager.rb")
 
 # Create document
@@ -711,5 +713,5 @@ print(f"Edit diagram: {edit_url}")
 
 ### Prerequisites
 
-- Google Docs skill must be installed (provides OAuth and drive_manager.rb)
+- The separate `google-docs` skill, installed at `~/.claude/skills/google-docs/`. It is not bundled here and provides OAuth plus `drive_manager.rb` and `docs_manager.rb`. `scripts/drive_helper.py` resolves that path directly, so the location matters.
 - First run will prompt for Google authorization if not already done
