@@ -4,42 +4,50 @@ import os
 sys.path.insert(0, os.path.expanduser("~/.claude/skills/excalidraw-diagrams/scripts"))
 from excalidraw_generator import ArchitectureDiagram
 
+# Create an architecture diagram for an e-commerce platform
 arch = ArchitectureDiagram()
 
-# Title
-arch.diagram.text_box(300, 30, "E-commerce Microservices Platform", font_size=24)
-
 # User
-arch.user("user", "User", x=400, y=100)
+arch.user("user", "User", x=400, y=50)
 
-# Web Frontend
-arch.component("frontend", "Web Frontend", x=350, y=220, color="blue")
+# Frontend
+arch.component("frontend", "Web Frontend", x=350, y=180, color="blue")
 
 # API Gateway
-arch.service("gateway", "API Gateway", x=350, y=360, color="violet")
+arch.service("gateway", "API Gateway", x=350, y=320, color="violet")
 
 # Services row
-arch.service("auth", "Auth Service", x=100, y=520, color="blue")
-arch.service("product", "Product Service", x=300, y=520, color="blue")
-arch.service("order", "Order Service", x=500, y=520, color="blue")
-arch.service("payment", "Payment Service", x=700, y=520, color="blue")
+arch.service("auth", "Auth Service", x=100, y=480, color="blue")
+arch.service("product", "Product Service", x=300, y=480, color="blue")
+arch.service("order", "Order Service", x=500, y=480, color="blue")
+arch.service("payment", "Payment Service", x=700, y=480, color="blue")
 
-# Databases
-arch.database("postgres", "PostgreSQL", x=350, y=680, color="green")
-arch.database("redis", "Redis", x=550, y=680, color="red")
+# Databases row
+arch.database("postgres", "PostgreSQL", x=300, y=640, color="green")
+arch.database("redis", "Redis", x=500, y=640, color="red")
 
-# Connections
+# Connections from User to Frontend
 arch.connect("user", "frontend", "HTTPS")
+
+# Frontend to Gateway
 arch.connect("frontend", "gateway", "REST")
+
+# Gateway to Services
 arch.connect("gateway", "auth", "REST")
-arch.connect("gateway", "product", "gRPC")
-arch.connect("gateway", "order", "REST")
+arch.connect("gateway", "product", "REST")
+arch.connect("gateway", "order", "gRPC")
 arch.connect("gateway", "payment", "gRPC")
+
+# Services to Databases
 arch.connect("auth", "postgres", "SQL")
 arch.connect("product", "postgres", "SQL")
 arch.connect("order", "postgres", "SQL")
 arch.connect("payment", "postgres", "SQL")
-arch.connect("auth", "redis", "Cache")
+arch.connect("product", "redis", "Cache")
+arch.connect("order", "redis", "Cache")
 
-arch.save("gallery_output/microservices.excalidraw")
-print("Created: gallery_output/microservices.excalidraw")
+# Save
+output_path = "/home/runner/work/excalidraw-diagrams/excalidraw-diagrams/gallery_output/microservices.excalidraw"
+arch.save(output_path)
+print(f"Created: {output_path}")
+print(f"Element count: {len(arch.elements)}")
